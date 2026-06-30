@@ -11,14 +11,6 @@
   # and are available to all users / login shells.
   flake.modules.darwin.emacs = { pkgs, ... }: {
     environment.systemPackages = with pkgs; [
-      # emacs-macport is the railwaycat fork of GNU Emacs.
-      # It is preferred over upstream emacs because it provides:
-      #   • True retina / HiDPI rendering (not just scaled)
-      #   • Native macOS full-screen and pixel-precise scrolling
-      #   • Improved IME / CJK input method integration
-      #   • Better system clipboard and drag-and-drop support
-      #   • macOS-style ⌘/⌥ key bindings available out of the box
-      #   • Native compilation (libgccjit) enabled in the nixpkgs build
       emacs-macport
 
       # ── Doom hard requirements ──────────────────────────────────────────
@@ -56,6 +48,24 @@
       # ── Build / compilation helpers ────────────────────────────────────
       cmake    # required to compile vterm and other native packages
       libtool  # GNU libtool — required by vterm (distinct from macOS libtool)
+
+      # ── Emacs-specific runtime tools ───────────────────────────────────
+      # fontconfig is required by doom doctor's font checker — without it
+      # Doom cannot verify installed fonts at startup.
+      fontconfig
+
+      # Speeds up LSP by acting as a JSON proxy between Emacs and language
+      # servers, reducing garbage collection pressure in Emacs.
+      emacs-lsp-booster
+
+      # org-download uses pngpaste to paste images from the clipboard
+      # directly into org buffers (org-download-clipboard).
+      pngpaste
+      ispell
+      # macOS coreutils does not include gls (GNU ls). coreutils-prefixed
+      # provides all GNU coreutils under their g-prefixed names so dired
+      # can find gls without shadowing the system ls.
+      coreutils-prefixed
     ];
 
     # Fonts required by this Doom config.
