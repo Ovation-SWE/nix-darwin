@@ -6,5 +6,13 @@
     environment.systemPackages = [
       pkgs.claude-code
     ];
+
+    # Enable homebrew support inside nix-darwin
+    homebrew.enable = true;
+
+    # Instruct Homebrew to install the official Claude Desktop GUI application
+    homebrew.casks = [
+      "claude"
+    ];
   };
 }
