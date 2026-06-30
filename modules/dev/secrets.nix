@@ -1,11 +1,10 @@
 { ... }: {
   flake.modules.darwin.secrets = { pkgs, ... }: {
     environment.systemPackages = with pkgs; [
+      proton-pass-cli
       secretspec
       devenv
     ];
-    # pass-cli (Proton Pass CLI) is not in nixpkgs — install via:
-    # curl -fsSL https://proton.me/download/pass-cli/install.sh | bash
 
     # devenv needs to be a trusted nix user to set build overrides
     nix.settings.trusted-users = [ "root" "ovation" ];
