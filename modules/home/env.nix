@@ -4,5 +4,7 @@
       EDITOR = "nvim";
       VISUAL = "nvim";
     };
+
+    home.file.".hushlogin".text = "";
   };
 }
