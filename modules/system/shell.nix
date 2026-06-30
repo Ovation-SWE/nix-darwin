@@ -20,11 +20,8 @@
       zoxide
       starship
       atuin
-      lazygit
       btop
-      yazi
       zinit
-      # Shell / development
       direnv
     ];
 
