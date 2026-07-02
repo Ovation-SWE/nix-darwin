@@ -58,6 +58,12 @@
       # servers, reducing garbage collection pressure in Emacs.
       emacs-lsp-booster
 
+      # ── Language servers ───────────────────────────────────────────────
+      # Nix LSP — satisfies Eglot's 'nil' / 'nixd' lookup for .nix buffers.
+      nil
+      # JSON LSP — satisfies Eglot's 'vscode-json-language-server' lookup.
+      vscode-langservers-extracted
+
       # org-download uses pngpaste to paste images from the clipboard
       # directly into org buffers (org-download-clipboard).
       pngpaste
@@ -85,11 +91,40 @@
     # sourcing chain is only active when home-manager manages the shell itself.
     programs.zsh.interactiveShellInit = ''
       export PATH="$HOME/.config/emacs/bin:$PATH"
+
+      # emacs-macport's raw binary crashes (NSImageCacheException, size-zero
+      # icon) when launched directly as a Mach-O rather than through
+      # LaunchServices/`open`. Route plain `emacs` invocations through the
+      # linked .app bundle instead; pass -nw/--batch/daemon calls through
+      # untouched so terminal and scripted usage are unaffected.
+      emacs() {
+        case "$*" in
+          *-nw*|*--batch*|*--daemon*|*-Q*)
+            command emacs "$@"
+            ;;
+          *)
+            emacsclient -c -n --alternate-editor="" "$@"
+            ;;
+        esac
+      }
     '';
   };
 
   # ── User environment (home-manager level) ──────────────────────────────────
   flake.modules.homeManager.emacs = { pkgs, lib, ... }: {
+
+    # Start the Emacs daemon at login via a LaunchAgent so emacsclient can
+    # connect immediately. KeepAlive restarts it if it crashes.
+    launchd.agents.emacs-daemon = {
+      enable = true;
+      config = {
+        ProgramArguments = [ "${pkgs.emacs-macport}/bin/emacs" "--daemon" ];
+        RunAtLoad = true;
+        KeepAlive = true;
+        StandardOutPath = "/tmp/emacs-daemon.log";
+        StandardErrorPath = "/tmp/emacs-daemon.log";
+      };
+    };
 
     # Clone Doom Emacs on first activation.
     # • Runs as the home-manager user (not root).
