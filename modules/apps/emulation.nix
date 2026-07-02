@@ -1,5 +1,13 @@
 { ... }: {
   flake.modules.darwin.emulation = { pkgs, ... }: {
+    # Expose the custom Ryubing derivation (prebuilt macOS .app) as pkgs.ryubing,
+    # overriding the nixpkgs package so emulation.nix can reference it normally.
+    nixpkgs.overlays = [
+      (final: _: {
+        ryubing = final.callPackage ../../pkgs/ryubing.nix {};
+      })
+    ];
+
     homebrew.enable = true;
     homebrew.casks = [
       # PSP — nixpkgs ppsspp-sdl is Linux only; use Homebrew standalone app
