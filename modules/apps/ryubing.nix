@@ -1,8 +1,8 @@
 { ... }: {
-  flake.modules.darwin.ryubing = { pkgs, ... }: {
+  flake.modules.darwin.ryubing = { pkgs, self, ... }: {
     nixpkgs.overlays = [
       (final: _: {
-        ryubing = final.callPackage ../../../pkgs/ryubing.nix {};
+        ryubing = final.callPackage "${self}/pkgs/ryubing.nix" {};
       })
     ];
 
