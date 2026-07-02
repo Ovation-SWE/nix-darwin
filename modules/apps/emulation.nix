@@ -1,13 +1,5 @@
 { ... }: {
   flake.modules.darwin.emulation = { pkgs, ... }: {
-    # Expose the custom Ryubing derivation (prebuilt macOS .app) as pkgs.ryubing,
-    # overriding the nixpkgs package so emulation.nix can reference it normally.
-    nixpkgs.overlays = [
-      (final: _: {
-        ryubing = final.callPackage ../../pkgs/ryubing.nix {};
-      })
-    ];
-
     homebrew.enable = true;
     homebrew.casks = [
       # PSP — nixpkgs ppsspp-sdl is Linux only; use Homebrew standalone app
@@ -31,10 +23,6 @@
       dolphin-emu  # GameCube / Wii (standalone; more dev-active than the core)
       melonDS      # Nintendo DS (standalone)
       snes9x       # Super Nintendo (standalone)
-
-      # Nintendo Switch — ryubing is the community continuation of Ryujinx after
-      # Nintendo forced the original project to shut down (Oct 2024)
-      ryubing
 
       # PlayStation 1 (standalone) — needs nixpkgs.config.allowUnfree = true
       # because DuckStation switched to a non-commercial license in 2024.
