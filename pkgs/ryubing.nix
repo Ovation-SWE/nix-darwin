@@ -8,15 +8,13 @@
 #
 # Requires: aarch64-darwin (an M-series Mac) or x86_64-darwin. macOS 15+.
 #
-# ── Filling in the hash ────────────────────────────────────────────────────
-# The `hash` below is a placeholder (lib.fakeHash). On first `darwin-rebuild
-# switch` the build will fail with:
-#     error: hash mismatch ...
-#            specified: sha256-AAAA...
-#            got:       sha256-<the real one>
-# Copy the "got:" value into `hash` and rebuild. Or fetch it ahead of time:
-#     nix store prefetch-file --json \
-#       https://git.ryujinx.app/Ryubing/Stable/releases/download/1.3.3/ryujinx-1.3.3-macos_universal.app.tar.gz
+# ── Updating ───────────────────────────────────────────────────────────────
+# 1. Check latest release at https://git.ryujinx.app/Ryubing/Canary/releases
+# 2. Update `version` and `assetName` below
+# 3. Prefetch the new hash:
+#      nix store prefetch-file --json \
+#        https://git.ryujinx.app/Ryubing/Canary/releases/download/<ver>/ryujinx-canary-<ver>-macos_universal.app.tar.gz
+# 4. Replace `hash` with the "hash" value from the output
 # ───────────────────────────────────────────────────────────────────────────
 
 { lib
@@ -26,33 +24,21 @@
 }:
 
 let
-  # ── Pick your channel/version here ──────────────────────────────────────
-  # Stable (recommended to start): repo "Stable", asset "ryujinx-<v>-..."
-  # Canary (bleeding edge):        repo "Canary", asset "ryujinx-canary-<v>-..."
-  # Always confirm the current version + exact filename on the release page:
-  #   https://git.ryujinx.app/Ryubing/Stable/releases
-  #   https://git.ryujinx.app/Ryubing/Canary/releases
-  channelRepo = "Stable";
-  version     = "1.3.3";
-  assetName   = "ryujinx-${version}-macos_universal.app.tar.gz";
-  # For Canary instead, use:
-  #   channelRepo = "Canary";
-  #   version     = "1.3.327";
-  #   assetName   = "ryujinx-canary-${version}-macos_universal.app.tar.gz";
+  version   = "1.3.328";
+  assetName = "ryujinx-canary-${version}-macos_universal.app.tar.gz";
 in
-stdenvNoCC.mkDerivation (finalAttrs: {
+stdenvNoCC.mkDerivation {
   pname = "ryubing";
   inherit version;
 
   src = fetchurl {
-    url = "https://git.ryujinx.app/Ryubing/${channelRepo}/releases/download/${version}/${assetName}";
-    hash = lib.fakeHash; # <-- replace after first build (see header)
+    url  = "https://git.ryujinx.app/Ryubing/Canary/releases/download/${version}/${assetName}";
+    hash = "sha256-mt1Z6xVauPeDfUxEwElozPM4NAxHR4MyyrSJ9Xd9nw8=";
   };
 
   nativeBuildInputs = [ unzip ];
 
-  # Handles either a .tar.gz (current) or a .zip asset, and avoids stdenv
-  # trying to cd into the .app bundle as if it were the source root.
+  # Avoids stdenv trying to cd into the .app bundle as if it were the source root.
   unpackPhase = ''
     runHook preUnpack
     mkdir -p unpacked && cd unpacked
@@ -76,16 +62,16 @@ stdenvNoCC.mkDerivation (finalAttrs: {
     runHook postInstall
   '';
 
-  # It's a codesigned bundle; don't let Nix strip/rewrite the Mach-O binaries.
+  # Codesigned bundle — don't let Nix strip/rewrite the Mach-O binaries.
   dontFixup = true;
 
   meta = {
     description = "Ryubing — community fork of the Ryujinx Nintendo Switch emulator";
-    homepage = "https://ryujinx.app";
-    downloadPage = "https://git.ryujinx.app/Ryubing/${channelRepo}/releases";
-    license = lib.licenses.mit;
+    homepage    = "https://ryujinx.app";
+    downloadPage = "https://git.ryujinx.app/Ryubing/Canary/releases";
+    license     = lib.licenses.mit;
     sourceProvenance = [ lib.sourceTypes.binaryNativeCode ];
-    platforms = [ "aarch64-darwin" "x86_64-darwin" ];
+    platforms   = [ "aarch64-darwin" "x86_64-darwin" ];
     mainProgram = "Ryujinx";
   };
-})
+}
