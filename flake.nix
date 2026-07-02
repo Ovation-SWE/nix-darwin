@@ -8,6 +8,7 @@
     home-manager.url = "github:nix-community/home-manager";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
     flake-parts.url = "github:hercules-ci/flake-parts";
+    comfyui-nix.url = "github:utensils/comfyui-nix";
   };
 
   outputs = inputs@{ self, flake-parts, nixpkgs, ... }:
