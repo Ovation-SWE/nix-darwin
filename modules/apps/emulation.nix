@@ -24,6 +24,9 @@
       melonDS      # Nintendo DS (standalone)
       snes9x       # Super Nintendo (standalone)
 
+      # Nintendo Switch — community continuation of Ryujinx post-shutdown (Oct 2024)
+      ryubing
+
       # PlayStation 1 (standalone) — needs nixpkgs.config.allowUnfree = true
       # because DuckStation switched to a non-commercial license in 2024.
       # To enable: add `nixpkgs.config.allowUnfree = true;` in macbook.nix,
