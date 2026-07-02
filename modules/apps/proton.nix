@@ -6,6 +6,7 @@
       "proton-drive"
       "proton-pass"
       "protonvpn"
+      "proton-mail-bridge"
     ];
   };
 }

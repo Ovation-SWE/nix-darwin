@@ -8,6 +8,8 @@
       pkgs.gh
       pkgs.neovim
       pkgs.yazi
+      pkgs.nodejs
+      pkgs.uv
     ];
 
     homebrew = {

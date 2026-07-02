@@ -26,6 +26,11 @@
         NSAutomaticPeriodSubstitutionEnabled = false;
         NSAutomaticQuoteSubstitutionEnabled  = false;
         AppleKeyboardUIMode                  = 3;
+        AppleWindowTabbingMode               = "manual";
+      };
+
+      WindowManager = {
+        GloballyEnabled = false;
       };
 
       finder = {
