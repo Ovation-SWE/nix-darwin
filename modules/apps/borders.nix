@@ -8,5 +8,17 @@
         $DRY_RUN_CMD /opt/homebrew/bin/brew install FelixKratz/formulae/borders
       fi
     '';
+
+    home.file.".config/borders/bordersrc".text = ''
+      #!/bin/bash
+      options=(
+          --width=6.0
+          --hidpi=on
+          --active-color=0xff89b4fa
+          --inactive-color=0xff313244
+          --order=above
+      )
+      borders "''${options[@]}"
+    '';
   };
 }
