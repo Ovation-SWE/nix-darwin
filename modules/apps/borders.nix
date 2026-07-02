@@ -9,7 +9,9 @@
       fi
     '';
 
-    home.file.".config/borders/bordersrc".text = ''
+    home.file.".config/borders/bordersrc" = {
+      force = true;
+      text = ''
       #!/bin/bash
       options=(
           --width=6.0
@@ -20,5 +22,6 @@
       )
       borders "''${options[@]}"
     '';
+    };
   };
 }
