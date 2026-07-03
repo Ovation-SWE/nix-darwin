@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # uninstall.sh — remove Determinate Nix and nix-darwin state for a clean reinstall
-set -euo pipefail
+set -eo pipefail
 
 info()    { printf '\033[1;34m[info]\033[0m  %s\n' "$*"; }
 success() { printf '\033[1;32m[ok]\033[0m    %s\n' "$*"; }
