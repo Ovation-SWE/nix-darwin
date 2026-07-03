@@ -10,14 +10,54 @@ die()     { printf '\033[1;31m[error]\033[0m %s\n' "$*" >&2; exit 1; }
 [[ "$(uname)" == "Darwin" ]] || die "This script is for macOS only."
 [[ "$EUID" -eq 0 ]] || die "Run with sudo: sudo bash uninstall.sh"
 
-# ── 1. Uninstall Determinate Nix ─────────────────────────────────────────────
+# ── 1. Restore nix-darwin /etc backups FIRST ─────────────────────────────────
+# Must happen before removing /nix so Determinate can cleanly edit the restored
+# files. nix-darwin replaces /etc/zshrc etc. with symlinks into the nix store;
+# after /nix is gone those become broken symlinks that -e can't detect.
+restore_etc() {
+  info "Restoring /etc files from nix-darwin backups..."
+
+  restore_file() {
+    local original="$1"
+    local backup="${original}.before-nix-darwin"
+    if [[ -f "$backup" ]]; then
+      rm -f "$original"          # removes symlink (broken or not) or regular file
+      mv "$backup" "$original"
+      success "Restored $original"
+    elif [[ -e "$original" ]] || [[ -L "$original" ]]; then
+      # No backup → nix-darwin created this from scratch; -L catches broken symlinks
+      rm -f "$original"
+      info "Removed $original (no pre-nix-darwin backup)"
+    fi
+  }
+
+  restore_file /etc/zshrc
+  restore_file /etc/zshenv
+  restore_file /etc/zprofile
+  restore_file /etc/bashrc
+  restore_file /etc/shells
+
+  # /etc/nix is owned by Nix itself — just remove the whole directory
+  if [[ -d /etc/nix ]]; then
+    rm -rf /etc/nix
+    success "Removed /etc/nix"
+  fi
+
+  # /etc/static is a nix-darwin symlink into the nix store
+  if [[ -L /etc/static ]] || [[ -e /etc/static ]]; then
+    rm -rf /etc/static
+    success "Removed /etc/static"
+  fi
+}
+
+# ── 2. Uninstall Determinate Nix ─────────────────────────────────────────────
 remove_determinate() {
   if [[ -x /nix/nix-installer ]]; then
     info "Running Determinate uninstaller..."
-    /nix/nix-installer uninstall --no-confirm || true
+    /nix/nix-installer uninstall --no-confirm
     success "Determinate Nix uninstalled"
   else
-    warn "Determinate uninstaller not found at /nix/nix-installer — skipping"
+    warn "Determinate uninstaller not found — skipping"
   fi
 
   # Belt-and-suspenders: remove /nix if still present
@@ -28,57 +68,18 @@ remove_determinate() {
   fi
 }
 
-# ── 2. Restore nix-darwin /etc backups ───────────────────────────────────────
-restore_etc() {
-  info "Restoring /etc files from nix-darwin backups..."
-
-  restore_file() {
-    local original="$1"
-    local backup="${original}.before-nix-darwin"
-    if [[ -f "$backup" ]]; then
-      mv "$backup" "$original"
-      success "Restored $original"
-    elif [[ -e "$original" ]]; then
-      # No backup means nix-darwin created it from scratch — remove it
-      rm -f "$original"
-      info "Removed $original (no pre-nix-darwin backup existed)"
-    fi
-  }
-
-  restore_file /etc/zshrc
-  restore_file /etc/zshenv
-  restore_file /etc/zprofile
-  restore_file /etc/bashrc
-  restore_file /etc/shells
-
-  # Restore nix.conf if there's a backup, otherwise remove the whole /etc/nix
-  if [[ -f /etc/nix/nix.conf.before-nix-darwin ]]; then
-    mv /etc/nix/nix.conf.before-nix-darwin /etc/nix/nix.conf
-    success "Restored /etc/nix/nix.conf"
-  fi
-
-  # Remove remaining nix-darwin-managed /etc entries
-  rm -f /etc/nix/nix.conf.before-nix-darwin
-  rm -f /etc/nix/nix.custom.conf.before-nix-darwin
-  [[ -d /etc/nix ]] && rm -rf /etc/nix && info "Removed /etc/nix"
-
-  # Remove /etc/static symlink
-  if [[ -L /etc/static ]]; then
-    rm /etc/static
-    success "Removed /etc/static symlink"
-  fi
-}
-
 # ── 3. Remove nix-darwin runtime state ───────────────────────────────────────
 remove_darwin_state() {
   info "Removing nix-darwin runtime state..."
 
-  [[ -L /run/current-system ]] && rm /run/current-system && success "Removed /run/current-system"
-  [[ -d /run/current-system ]] && rm -rf /run/current-system
+  # /run/current-system is a symlink managed by nix-darwin
+  if [[ -L /run/current-system ]] || [[ -d /run/current-system ]]; then
+    rm -rf /run/current-system
+    success "Removed /run/current-system"
+  fi
 
-  # Remove launchd daemon plists that nix-darwin may have written
-  for plist in /Library/LaunchDaemons/org.nixos.*.plist \
-               /Library/LaunchDaemons/systems.determinate.*.plist; do
+  # Remove nix-darwin launchd plists (Determinate handles its own)
+  for plist in /Library/LaunchDaemons/org.nixos.*.plist; do
     [[ -f "$plist" ]] || continue
     launchctl unload "$plist" 2>/dev/null || true
     rm -f "$plist"
@@ -91,13 +92,13 @@ main() {
   info "=== Cleaning up Determinate Nix + nix-darwin state ==="
   echo
 
-  remove_determinate
-  restore_etc
-  remove_darwin_state
+  restore_etc         # must come first — restores symlinks before /nix is gone
+  remove_determinate  # uninstalls Nix cleanly against real /etc files
+  remove_darwin_state # cleans up remaining runtime state
 
   echo
   success "=== Cleanup complete! ==="
-  info "You can now run setup.sh for a fresh install using the Lix-based installer."
+  info "You can now run: bash setup.sh"
 }
 
 main "$@"
