@@ -25,10 +25,10 @@ install_nix() {
     return
   fi
 
-  info "Installing Nix via Determinate Systems installer..."
-  curl -fsSL https://install.determinate.systems/nix | sh -s -- install
+  info "Installing Nix via Lix installer (recommended by nix-darwin)..."
+  curl -sSf -L https://install.lix.systems/lix | sh -s -- install
 
-  # Source Nix for the rest of this script
+  # Source Nix daemon for the rest of this script
   if [[ -e /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ]]; then
     # shellcheck disable=SC1091
     . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
@@ -65,7 +65,7 @@ bootstrap_darwin() {
   else
     info "First-time nix-darwin bootstrap via 'nix run'..."
     # nix-darwin's darwin-rebuild isn't on PATH yet; use nix run to activate it.
-    nix run nix-darwin -- switch --flake "${FLAKE}#${HOSTNAME}"
+    sudo nix run nix-darwin/master#darwin-rebuild -- switch --flake "${FLAKE}#${HOSTNAME}"
   fi
   success "nix-darwin activated"
 }
