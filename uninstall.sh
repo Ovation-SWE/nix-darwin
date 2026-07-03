@@ -37,11 +37,10 @@ restore_etc() {
   restore_file /etc/bashrc
   restore_file /etc/shells
 
-  # /etc/nix is owned by Nix itself — just remove the whole directory
-  if [[ -d /etc/nix ]]; then
-    rm -rf /etc/nix
-    success "Removed /etc/nix"
-  fi
+  # Leave /etc/nix itself for Determinate to revert — only remove nix-darwin's
+  # backup files inside it so they don't interfere.
+  rm -f /etc/nix/nix.conf.before-nix-darwin
+  rm -f /etc/nix/nix.custom.conf.before-nix-darwin
 
   # /etc/static is a nix-darwin symlink into the nix store
   if [[ -L /etc/static ]] || [[ -e /etc/static ]]; then
@@ -77,6 +76,9 @@ remove_darwin_state() {
     rm -rf /run/current-system
     success "Removed /run/current-system"
   fi
+
+  # Belt-and-suspenders: remove /etc/nix if Determinate left it behind
+  [[ -d /etc/nix ]] && rm -rf /etc/nix && success "Removed /etc/nix"
 
   # Remove nix-darwin launchd plists (Determinate handles its own)
   for plist in /Library/LaunchDaemons/org.nixos.*.plist; do
